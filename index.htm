@@ -1,4 +1,3 @@
-
 <html>
 <head>
 
@@ -45,13 +44,11 @@ body.dark-mode .tooltip {
     color: #000; /* Specify the desired text color for dark mode */
 background-color : #999
   }
-
-	 body.dark-mode	  #search-bar::placeholder {
+	
+ body.dark-mode	  #search-bar::placeholder {
     color: #fff; /* Specify the desired color for the placeholder text */
   }
 
-	
-	
   body.dark-mode svg .x-label {
     /* Override SVG text color */
     fill: #f2f2f2;
@@ -113,7 +110,7 @@ body.dark-mode .button-8:focus {
  .dark-mode-toggle {
     position: absolute;
     top: 716.5px;
-    left: 630px;
+    left: 684.5px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -496,8 +493,42 @@ width: 120px;
 #search-bar {
     position: absolute;
     top: 726px; /* Adjust the desired top position */
-    left: 730px; /* Adjust the desired left position */
+    left: 760px; /* Adjust the desired left position */
   }
+
+
+.toggle-button {
+  background-color: #f5f5f5;
+  color: #333;
+  padding: 7px 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+position: absolute;
+top: 717px;
+left: 611px;
+}
+
+.toggle-button:hover {
+  background-color: #eaeaea;
+}
+
+.toggle-button:focus {
+  outline: none;
+}
+
+.toggle-button:active {
+  background-color: #ccc;
+}
+
+
+
+.icon::before {
+  content: "\f2b5";
+  font-family: "Ionicons"; /* Replace with the appropriate font */
+font-size: 22px;
+}
+
 
 </style>
 	
@@ -519,6 +550,7 @@ width: 120px;
   </div>
 <svg id="scatter-plot"></svg>
 <input type="text" id="search-bar" placeholder="Search player...">
+<button id="toggle-median-lines" class="toggle-button"><div class="icon"></div></button>
 <script>
   var csvData = `ID,Player,Minutes played,Duels per 90,Duels won %,Successful defensive actions per 90,Defensive duels per 90,Defensive duels won %,Aerial duels per 90,Aerial duels won %,PAdj Sliding tackles,Shots blocked per 90,PAdj Interceptions,Fouls per 90,Yellow cards per 90,Successful attacking actions per 90,Goals per 90,Non-penalty goals per 90,xG per 90,Shots per 90,Shots on target %,Goal conversion %,Assists per 90,Crosses per 90,Accurate crosses %,Dribbles per 90,Successful dribbles %,Offensive duels per 90,Offensive duels won %,Touches in box per 90,Progressive runs per 90,Accelerations per 90,Received passes per 90,Received long passes per 90,Fouls suffered per 90,Passes per 90,Accurate passes %,Forward passes per 90,Accurate forward passes %,Short / medium passes per 90,Accurate short / medium passes %,Long passes per 90,Accurate long passes %,Average pass length m,xA per 90,Shot assists per 90,Second assists per 90,Third assists per 90,Smart passes per 90,Accurate smart passes %,Key passes per 90,Passes to final third per 90,Accurate passes to final third %,Passes to penalty area per 90,Accurate passes to penalty area %,Through passes per 90,Accurate through passes %,Deep completions per 90,Deep completed crosses per 90,Progressive passes per 90,Accurate progressive passes %,Direct free kicks per 90,Direct free kicks on target %
 1,J. Bellingham,4557,23.7,47.67,9.16,5.73,62.07,2.96,44.67,1.49,0.2,6.63,1.17,0.22,4.36,0.28,0.26,0.21,1.64,43.37,16.867,0.14,1.01,27.45,5.29,55.22,11.97,43.07,2.55,1.82,1.01,36.48,0.73,2.19,47.89,85.15,14.28,79.39,43.03,88.34,3.87,64.29,17.65,0.09,0.65,0.1,0.08,1.07,42.59,0.36,7.09,82.45,2.67,59.26,1.48,36,1.46,0.28,6.77,77.26,0.04,0
@@ -1015,6 +1047,7 @@ width: 120px;
 495,L. Vega,1663,21.11,51.54,10.39,10.17,60.64,2.49,50,0.27,0.38,4.93,2.38,0.43,1.03,0,0,0.05,0.7,7.69,0,0,0.81,26.67,1.14,57.14,5.68,40.95,0.81,0.16,0.05,23.43,0.22,1.19,37.45,82.23,12.72,71.49,32.31,87.6,4.44,51.22,19.34,0.01,0.38,0.05,0,0.27,40,0.05,6.76,74.4,1.14,38.1,0.7,46.15,0.38,0.22,6.44,72.27,0.05,0`;
 
 
+
   var rows = csvData.trim().split('\n');
   var header = rows[0].split(',');
   var data = rows.slice(1).map(function(row) {
@@ -1027,12 +1060,13 @@ width: 120px;
   var width = 1080 - margin.left - margin.right;
   var height = 720 - margin.top - margin.bottom;
 
-// select the container element and set its position to relative
+var medianLinesVisible = false;
+
+
 var container = d3.select("body")
   .append("div")
   .style("position", "relative");
 
-// create the first select element and position it to the left of the container
 var selectX = container.append("select")
   .attr("id", "select-x")
   .on("change", updateChart)
@@ -1040,13 +1074,18 @@ var selectX = container.append("select")
   .style("left", "80px")
   .style("top", "0px");
 
-// create the second select element and position it to the right of the container
 var selectY = container.append("select")
   .attr("id", "select-y")
   .on("change", updateChart)
   .style("position", "absolute")
   .style("left", "330px")
   .style("top", "0px");
+
+
+var xMedian = d3.median(data, function(d) { return d[header.indexOf(xMetric)]; });
+var yMedian = d3.median(data, function(d) { return d[header.indexOf(yMetric)]; });
+
+
 
 
   header.slice(2).forEach(function(metric) {
@@ -1138,9 +1177,7 @@ tooltip.style("position", "absolute")
   .style("font-size", "12px");
 	
 	document.addEventListener('touchstart', function(event) {
-  // Check if the touch event target is the tooltip or one of its child elements
   if (!tooltip.contains(event.target)) {
-    // Hide the tooltip if the touch event target is not the tooltip or one of its child elements
     tooltip.style.display = 'none';
   }
 });
@@ -1247,6 +1284,29 @@ svg.append("text")
 
 
 
+// X-axis median line
+var xMedianLine = svg.append("line")
+  .attr("class", "x-median")
+  .attr("x1", xScale(xMedian))
+  .attr("y1", 0)
+  .attr("x2", xScale(xMedian))
+  .attr("y2", height)
+  .style("stroke", "red")
+  .style("stroke-dasharray", "4")
+  .style("display", medianLinesVisible ? "block" : "none");
+
+// Y-axis median line
+var yMedianLine = svg.append("line")
+  .attr("class", "y-median")
+  .attr("x1", 0)
+  .attr("y1", yScale(yMedian))
+  .attr("x2", width)
+  .attr("y2", yScale(yMedian))
+  .style("stroke", "red")
+  .style("stroke-dasharray", "4")
+  .style("display", medianLinesVisible ? "block" : "none");
+
+
 
 
 function updateChart() {
@@ -1257,6 +1317,37 @@ function updateChart() {
 
 xScale.domain(d3.extent(data, function(d) { return d[header.indexOf(xMetric)]; })).nice();
 yScale.domain(d3.extent(data, function(d) { return d[header.indexOf(yMetric)]; })).nice();
+ 
+// Remove existing median lines
+svg.selectAll(".median-line").remove();
+
+// Create new median lines
+if (medianLinesVisible) {
+  // Calculate the new medians based on the selected metrics
+  var xMedian = d3.median(data, function(d) { return d[header.indexOf(xMetric)]; });
+  var yMedian = d3.median(data, function(d) { return d[header.indexOf(yMetric)]; });
+
+  // X-axis median line
+  svg.append("line")
+    .attr("class", "median-line")
+    .attr("x1", xScale(xMedian))
+    .attr("y1", 0)
+    .attr("x2", xScale(xMedian))
+    .attr("y2", height)
+    .style("stroke", "red")
+    .style("stroke-dasharray", "4");
+
+  // Y-axis median line
+  svg.append("line")
+    .attr("class", "median-line")
+    .attr("x1", 0)
+    .attr("y1", yScale(yMedian))
+    .attr("x2", width)
+    .attr("y2", yScale(yMedian))
+    .style("stroke", "red")
+    .style("stroke-dasharray", "4");
+}
+
 
 
   svg.select(".x-label")
@@ -1279,6 +1370,20 @@ yScale.domain(d3.extent(data, function(d) { return d[header.indexOf(yMetric)]; }
     .transition()
     .duration(1000)
     .call(d3.axisLeft(yScale).tickSize(0));
+
+  svg.select(".x-median")
+    .transition()
+    .duration(1000)
+    .attr("x1", xScale(xMedian))
+    .attr("x2", xScale(xMedian));
+
+  svg.select(".y-median")
+    .transition()
+    .duration(1000)
+    .attr("y1", yScale(yMedian))
+    .attr("y2", yScale(yMedian));
+
+
 }
 
 
@@ -1288,28 +1393,46 @@ function resetSearch() {
 }
 
 
+
+function resetMedianLines() {
+  svg.selectAll(".median-line").remove();
+}
+
+
+var toggleButton = document.getElementById("toggle-median-lines");
+toggleButton.addEventListener("click", function() {
+  medianLinesVisible = !medianLinesVisible; // toggle the visibility state
+
+  if (medianLinesVisible) {
+    updateChart();
+  } else {
+    svg.selectAll(".median-line").remove(); // Remove existing median lines
+  }
+});
+
+
+
 </script>
 
 <a href="https://datamb.football/plots/" target="_blank" rel="noopener noreferrer">
   <button class="button-1" role="button">Home</button>
-<a href="https://datamb.football/plotgk/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/gkpl/" target="_blank" rel="noopener noreferrer">
   <button class="button-2" role="button">Goalkeepers</button>
-<a href="https://datamb.football/plotcb/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/plcb/" target="_blank" rel="noopener noreferrer">
   <button class="button-3" role="button">Centrebacks</button>
-<a href="https://datamb.football/plotfb/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/plfb/" target="_blank" rel="noopener noreferrer">
   <button class="button-4" role="button">Fullbacks</button>
-<a href="https://datamb.football/plotcm/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/plcm/" target="_blank" rel="noopener noreferrer">
   <button class="button-5" role="button">Midfielders</button>
-<a href="https://datamb.football/plotfw/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/plfw/" target="_blank" rel="noopener noreferrer">
   <button class="button-6" role="button">Wingers</button>
-<a href="https://datamb.football/plotst/" target="_blank" rel="noopener noreferrer">
+<a href="https://datamb.football/plst/" target="_blank" rel="noopener noreferrer">
   <button class="button-7" role="button">Strikers</button>
 	<a href="https://datamb.football/radars/" target="_blank" rel="noopener noreferrer">
   <button class="button-9" role="button">Radars</button>
 <a href="https://twitter.com/DataMB_" target="_blank" rel="noopener noreferrer">
   <button class="button-8" role="button">@DataMB_</button>
 </a>
-
 <script>
 
     // Function to toggle dark mode
@@ -1334,3 +1457,4 @@ function resetSearch() {
 
 </body>
 </html>
+
