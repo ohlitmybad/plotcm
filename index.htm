@@ -1,4 +1,6 @@
 
+
+
 <html>
 <head>
 
@@ -20,8 +22,6 @@
 
 <style>
 
-
-
 	
   /* Dark Mode Styles */
   body.dark-mode,
@@ -42,6 +42,13 @@ body.dark-mode .tooltip {
   padding: 10px;
   font-size: 12px;
 }
+
+
+
+ body.dark-mode #search-bar {
+    color: #000; /* Specify the desired text color for dark mode */
+background-color : #999
+  }
 
   body.dark-mode svg .x-label {
     /* Override SVG text color */
@@ -143,6 +150,12 @@ body.dark-mode .toggle-slider {
 
 body.dark-mode input:checked + .toggle-slider:before {
   background-color: #ccc; /* Darker background color for dark mode */
+}
+
+
+circle.highlighted {
+  stroke: #ff00ff;
+  stroke-width: 3px;
 }
 
 
@@ -478,6 +491,15 @@ width: 120px;
 }
 
 
+#search-bar {
+    position: absolute;
+    top: 726px; /* Adjust the desired top position */
+    left: 730px; /* Adjust the desired left position */
+  }
+
+  #search-bar::placeholder {
+    color: #fff; /* Specify the desired color for the placeholder text */
+  }
 </style>
 	
 </head>
@@ -492,10 +514,12 @@ width: 120px;
 </script>
 
 <body>
+	
 	<div class="dark-mode-toggle" onclick="toggleDarkMode()">
     <div class="toggle-icon"></div>
   </div>
 <svg id="scatter-plot"></svg>
+<input type="text" id="search-bar" placeholder="Search player...">
 <script>
   var csvData = `ID,Player,Minutes played,Duels per 90,Duels won %,Successful defensive actions per 90,Defensive duels per 90,Defensive duels won %,Aerial duels per 90,Aerial duels won %,PAdj Sliding tackles,Shots blocked per 90,PAdj Interceptions,Fouls per 90,Yellow cards per 90,Successful attacking actions per 90,Goals per 90,Non-penalty goals per 90,xG per 90,Shots per 90,Shots on target %,Goal conversion %,Assists per 90,Crosses per 90,Accurate crosses %,Dribbles per 90,Successful dribbles %,Offensive duels per 90,Offensive duels won %,Touches in box per 90,Progressive runs per 90,Accelerations per 90,Received passes per 90,Received long passes per 90,Fouls suffered per 90,Passes per 90,Accurate passes %,Forward passes per 90,Accurate forward passes %,Short / medium passes per 90,Accurate short / medium passes %,Long passes per 90,Accurate long passes %,Average pass length m,xA per 90,Shot assists per 90,Second assists per 90,Third assists per 90,Smart passes per 90,Accurate smart passes %,Key passes per 90,Passes to final third per 90,Accurate passes to final third %,Passes to penalty area per 90,Accurate passes to penalty area %,Through passes per 90,Accurate through passes %,Deep completions per 90,Deep completed crosses per 90,Progressive passes per 90,Accurate progressive passes %,Direct free kicks per 90,Direct free kicks on target %
 1,J. Bellingham,4557,23.7,47.67,9.16,5.73,62.07,2.96,44.67,1.49,0.2,6.63,1.17,0.22,4.36,0.28,0.26,0.21,1.64,43.37,16.867,0.14,1.01,27.45,5.29,55.22,11.97,43.07,2.55,1.82,1.01,36.48,0.73,2.19,47.89,85.15,14.28,79.39,43.03,88.34,3.87,64.29,17.65,0.09,0.65,0.1,0.08,1.07,42.59,0.36,7.09,82.45,2.67,59.26,1.48,36,1.46,0.28,6.77,77.26,0.04,0
@@ -991,6 +1015,7 @@ width: 120px;
 494,Renato Veiga,1878,13.84,54.91,8.56,4.88,55.67,3.02,61.67,0.77,0.35,8.17,1.66,0.43,1.56,0.14,0.1,0.12,1.01,35,15,0,0.45,22.22,1.61,65.63,3.83,59.21,0.76,0.86,0.25,34.43,0.35,0.7,49.88,84.86,16.26,67.8,42.33,91.44,7.15,50,21.8,0.01,0.2,0,0,0.25,20,0.05,7.4,57.82,1.86,35.14,0.86,11.76,0.5,0.1,7.35,73.97,0.05,0
 495,L. Vega,1663,21.11,51.54,10.39,10.17,60.64,2.49,50,0.27,0.38,4.93,2.38,0.43,1.03,0,0,0.05,0.7,7.69,0,0,0.81,26.67,1.14,57.14,5.68,40.95,0.81,0.16,0.05,23.43,0.22,1.19,37.45,82.23,12.72,71.49,32.31,87.6,4.44,51.22,19.34,0.01,0.38,0.05,0,0.27,40,0.05,6.76,74.4,1.14,38.1,0.7,46.15,0.38,0.22,6.44,72.27,0.05,0`;
 
+
   var rows = csvData.trim().split('\n');
   var header = rows[0].split(',');
   var data = rows.slice(1).map(function(row) {
@@ -1125,6 +1150,24 @@ var names = rows.slice(1).map(function(row) {
   return row.split(',')[1];
 });
 
+var searchBar = document.getElementById("search-bar");
+
+searchBar.addEventListener("input", function() {
+  var searchTerm = searchBar.value.toLowerCase();
+
+  if (searchTerm === '') {
+    resetSearch();
+    return;
+  }
+
+  circles.classed("highlighted", false);
+
+  circles.filter(function(d, i) {
+      return names[i].toLowerCase().includes(searchTerm);
+    })
+    .classed("highlighted", true);
+});
+
 
 
 var clickedCircles = []; // array to keep track of clicked circles
@@ -1135,7 +1178,7 @@ var circles = svg.selectAll("circle")
   .append("circle")
   .attr("cx", function(d) { return xScale(d[header.indexOf(xMetric)]); })
   .attr("cy", function(d) { return yScale(d[header.indexOf(yMetric)]); })
-  .attr("r", 7)
+  .attr("r", 8)
   .style("fill", "steelblue")
   .on("mouseover", function(d, i) {
     d3.select(this)
@@ -1229,6 +1272,10 @@ yScale.domain(d3.extent(data, function(d) { return d[header.indexOf(yMetric)]; }
 }
 
 
+function resetSearch() {
+  searchBar.value = '';
+  circles.classed("highlighted", false);
+}
 
 
 </script>
